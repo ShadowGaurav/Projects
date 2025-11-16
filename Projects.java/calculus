@@ -1,0 +1,332 @@
+import React, { useState } from 'react';
+
+export default function ScientificCalculator() {
+  const [display, setDisplay] = useState('0');
+  const [previousValue, setPreviousValue] = useState(null);
+  const [operation, setOperation] = useState(null);
+  const [newNumber, setNewNumber] = useState(true);
+  const [advanced, setAdvanced] = useState(false);
+  const [angleMode, setAngleMode] = useState('DEG'); // DEG or RAD
+
+  const handleNumber = (num) => {
+    if (newNumber) {
+      setDisplay(num);
+      setNewNumber(false);
+    } else {
+      setDisplay(display === '0' ? num : display + num);
+    }
+  };
+
+  const handleDecimal = () => {
+    if (newNumber) {
+      setDisplay('0.');
+      setNewNumber(false);
+    } else if (!display.includes('.')) {
+      setDisplay(display + '.');
+    }
+  };
+
+  const handleOperation = (op) => {
+    const current = parseFloat(display);
+    
+    if (previousValue !== null && operation && !newNumber) {
+      const result = calculate(previousValue, current, operation);
+      setDisplay(String(result));
+      setPreviousValue(result);
+    } else {
+      setPreviousValue(current);
+    }
+    
+    setOperation(op);
+    setNewNumber(true);
+  };
+
+  const calculate = (prev, curr, op) => {
+    switch (op) {
+      case '+': return prev + curr;
+      case '-': return prev - curr;
+      case '×': return prev * curr;
+      case '÷': return prev / curr;
+      case '^': return Math.pow(prev, curr);
+      default: return curr;
+    }
+  };
+
+  const handleEquals = () => {
+    if (operation && previousValue !== null) {
+      const current = parseFloat(display);
+      const result = calculate(previousValue, current, operation);
+      setDisplay(String(result));
+      setPreviousValue(null);
+      setOperation(null);
+      setNewNumber(true);
+    }
+  };
+
+  const handleClear = () => {
+    setDisplay('0');
+    setPreviousValue(null);
+    setOperation(null);
+    setNewNumber(true);
+  };
+
+  const handleBackspace = () => {
+    if (display.length > 1) {
+      setDisplay(display.slice(0, -1));
+    } else {
+      setDisplay('0');
+      setNewNumber(true);
+    }
+  };
+
+  const handleFunction = (func) => {
+    const current = parseFloat(display);
+    let result;
+
+    const toRadians = (deg) => (deg * Math.PI) / 180;
+    const toDegrees = (rad) => (rad * 180) / Math.PI;
+
+    switch (func) {
+      case '√':
+        result = Math.sqrt(current);
+        break;
+      case 'x²':
+        result = Math.pow(current, 2);
+        break;
+      case '1/x':
+        result = 1 / current;
+        break;
+      case 'sin':
+        result = angleMode === 'DEG' ? Math.sin(toRadians(current)) : Math.sin(current);
+        break;
+      case 'cos':
+        result = angleMode === 'DEG' ? Math.cos(toRadians(current)) : Math.cos(current);
+        break;
+      case 'tan':
+        result = angleMode === 'DEG' ? Math.tan(toRadians(current)) : Math.tan(current);
+        break;
+      case 'ln':
+        result = Math.log(current);
+        break;
+      case 'log':
+        result = Math.log10(current);
+        break;
+      case 'e^x':
+        result = Math.exp(current);
+        break;
+      case '10^x':
+        result = Math.pow(10, current);
+        break;
+      case '±':
+        result = -current;
+        break;
+      case 'π':
+        setDisplay(String(Math.PI));
+        setNewNumber(true);
+        return;
+      case 'e':
+        setDisplay(String(Math.E));
+        setNewNumber(true);
+        return;
+      case 'n!':
+        result = factorial(current);
+        break;
+      default:
+        return;
+    }
+
+    setDisplay(String(result));
+    setNewNumber(true);
+  };
+
+  const factorial = (n) => {
+    if (n < 0 || !Number.isInteger(n)) return NaN;
+    if (n === 0 || n === 1) return 1;
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+      result *= i;
+    }
+    return result;
+  };
+
+  const toggleAngleMode = () => {
+    setAngleMode(angleMode === 'DEG' ? 'RAD' : 'DEG');
+  };
+
+  const Button = ({ children, onClick, className = '', variant = 'default' }) => {
+    const baseClasses = "rounded-full font-medium transition-all active:scale-95 shadow-sm";
+    const variants = {
+      default: "bg-gray-200 hover:bg-gray-300 text-gray-900",
+      operator: "bg-gray-400 hover:bg-gray-500 text-white",
+      equals: "bg-gray-900 hover:bg-black text-white",
+      function: "bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm",
+    };
+    
+    return (
+      <button
+        onClick={onClick}
+        className={`${baseClasses} ${variants[variant]} ${className}`}
+      >
+        {children}
+      </button>
+    );
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-md">
+        {/* Display */}
+        <div className="bg-gray-100 rounded-2xl p-6 mb-6 border-2 border-gray-200">
+          <div className="flex justify-between items-center mb-2 text-xs text-gray-500">
+            <span>{angleMode}</span>
+            <span>{advanced ? 'ADVANCED' : 'BASIC'}</span>
+          </div>
+          <div className="text-right text-4xl font-light text-gray-900 break-all min-h-[3rem] flex items-center justify-end">
+            {display}
+          </div>
+          {operation && (
+            <div className="text-right text-sm text-gray-400 mt-1">
+              {previousValue} {operation}
+            </div>
+          )}
+        </div>
+
+        {/* Mode Toggle */}
+        <div className="mb-4">
+          <button
+            onClick={() => setAdvanced(!advanced)}
+            className="w-full py-3 rounded-full bg-gray-800 hover:bg-gray-900 text-white font-medium transition-all"
+          >
+            {advanced ? '← Basic Mode' : 'Advanced Mode →'}
+          </button>
+        </div>
+
+        {/* Advanced Functions (when enabled) */}
+        {advanced && (
+          <div className="grid grid-cols-5 gap-2 mb-4">
+            <Button onClick={() => handleFunction('sin')} variant="function" className="h-12">
+              sin
+            </Button>
+            <Button onClick={() => handleFunction('cos')} variant="function" className="h-12">
+              cos
+            </Button>
+            <Button onClick={() => handleFunction('tan')} variant="function" className="h-12">
+              tan
+            </Button>
+            <Button onClick={() => handleFunction('ln')} variant="function" className="h-12">
+              ln
+            </Button>
+            <Button onClick={() => handleFunction('log')} variant="function" className="h-12">
+              log
+            </Button>
+            <Button onClick={() => handleFunction('√')} variant="function" className="h-12">
+              √
+            </Button>
+            <Button onClick={() => handleFunction('x²')} variant="function" className="h-12">
+              x²
+            </Button>
+            <Button onClick={() => handleOperation('^')} variant="function" className="h-12">
+              x^y
+            </Button>
+            <Button onClick={() => handleFunction('e^x')} variant="function" className="h-12">
+              e^x
+            </Button>
+            <Button onClick={() => handleFunction('10^x')} variant="function" className="h-12">
+              10^x
+            </Button>
+            <Button onClick={() => handleFunction('1/x')} variant="function" className="h-12">
+              1/x
+            </Button>
+            <Button onClick={() => handleFunction('n!')} variant="function" className="h-12">
+              n!
+            </Button>
+            <Button onClick={() => handleFunction('π')} variant="function" className="h-12">
+              π
+            </Button>
+            <Button onClick={() => handleFunction('e')} variant="function" className="h-12">
+              e
+            </Button>
+            <Button onClick={toggleAngleMode} variant="function" className="h-12">
+              {angleMode}
+            </Button>
+          </div>
+        )}
+
+        {/* Main Calculator Buttons */}
+        <div className="grid grid-cols-4 gap-3">
+          {/* Row 1 */}
+          <Button onClick={handleClear} variant="operator" className="h-16">
+            AC
+          </Button>
+          <Button onClick={handleBackspace} variant="operator" className="h-16">
+            ⌫
+          </Button>
+          <Button onClick={() => handleFunction('±')} variant="operator" className="h-16">
+            ±
+          </Button>
+          <Button onClick={() => handleOperation('÷')} variant="operator" className="h-16">
+            ÷
+          </Button>
+
+          {/* Row 2 */}
+          <Button onClick={() => handleNumber('7')} className="h-16">
+            7
+          </Button>
+          <Button onClick={() => handleNumber('8')} className="h-16">
+            8
+          </Button>
+          <Button onClick={() => handleNumber('9')} className="h-16">
+            9
+          </Button>
+          <Button onClick={() => handleOperation('×')} variant="operator" className="h-16">
+            ×
+          </Button>
+
+          {/* Row 3 */}
+          <Button onClick={() => handleNumber('4')} className="h-16">
+            4
+          </Button>
+          <Button onClick={() => handleNumber('5')} className="h-16">
+            5
+          </Button>
+          <Button onClick={() => handleNumber('6')} className="h-16">
+            6
+          </Button>
+          <Button onClick={() => handleOperation('-')} variant="operator" className="h-16">
+            −
+          </Button>
+
+          {/* Row 4 */}
+          <Button onClick={() => handleNumber('1')} className="h-16">
+            1
+          </Button>
+          <Button onClick={() => handleNumber('2')} className="h-16">
+            2
+          </Button>
+          <Button onClick={() => handleNumber('3')} className="h-16">
+            3
+          </Button>
+          <Button onClick={() => handleOperation('+')} variant="operator" className="h-16">
+            +
+          </Button>
+
+          {/* Row 5 */}
+          <Button onClick={() => handleNumber('0')} className="h-16 col-span-2">
+            0
+          </Button>
+          <Button onClick={handleDecimal} className="h-16">
+            .
+          </Button>
+          <Button onClick={handleEquals} variant="equals" className="h-16">
+            =
+          </Button>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 text-center text-xs text-gray-400">
+          Scientific Calculator
+        </div>
+      </div>
+    </div>
+  );
+}

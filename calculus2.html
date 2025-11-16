@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .display-container {
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .mode-indicator {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .display {
+            text-align: right;
+            font-size: 42px;
+            font-weight: 300;
+            color: #222;
+            min-height: 60px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .operation-display {
+            text-align: right;
+            font-size: 14px;
+            color: #999;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        .mode-toggle {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 25px;
+            background: #2c2c2c;
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-toggle:hover {
+            background: #000;
+            transform: translateY(-2px);
+        }
+
+        .mode-toggle:active {
+            transform: translateY(0);
+        }
+
+        .advanced-panel {
+            display: none;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .advanced-panel.active {
+            display: grid;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 70px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-number {
+            background: #e8e8e8;
+            color: #222;
+        }
+
+        .btn-number:hover {
+            background: #d5d5d5;
+        }
+
+        .btn-operator {
+            background: #b0b0b0;
+            color: white;
+        }
+
+        .btn-operator:hover {
+            background: #9a9a9a;
+        }
+
+        .btn-equals {
+            background: #2c2c2c;
+            color: white;
+        }
+
+        .btn-equals:hover {
+            background: #000;
+        }
+
+        .btn-function {
+            background: #d0d0d0;
+            color: #333;
+            font-size: 14px;
+            height: 50px;
+        }
+
+        .btn-function:hover {
+            background: #bbb;
+        }
+
+        .btn-zero {
+            grid-column: span 2;
+            border-radius: 35px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display-container">
+            <div class="mode-indicator">
+                <span id="angleMode">DEG</span>
+                <span id="calcMode">BASIC</span>
+            </div>
+            <div class="display" id="display">0</div>
+            <div class="operation-display" id="operationDisplay"></div>
+        </div>
+
+        <button class="mode-toggle" onclick="toggleMode()">Advanced Mode →</button>
+
+        <div class="advanced-panel" id="advancedPanel">
+            <button class="btn-function" onclick="handleFunction('sin')">sin</button>
+            <button class="btn-function" onclick="handleFunction('cos')">cos</button>
+            <button class="btn-function" onclick="handleFunction('tan')">tan</button>
+            <button class="btn-function" onclick="handleFunction('ln')">ln</button>
+            <button class="btn-function" onclick="handleFunction('log')">log</button>
+            <button class="btn-function" onclick="handleFunction('sqrt')">√</button>
+            <button class="btn-function" onclick="handleFunction('square')">x²</button>
+            <button class="btn-function" onclick="handleFunction('power')">x^y</button>
+            <button class="btn-function" onclick="handleFunction('exp')">e^x</button>
+            <button class="btn-function" onclick="handleFunction('pow10')">10^x</button>
+            <button class="btn-function" onclick="handleFunction('reciprocal')">1/x</button>
+            <button class="btn-function" onclick="handleFunction('factorial')">n!</button>
+            <button class="btn-function" onclick="handleFunction('pi')">π</button>
+            <button class="btn-function" onclick="handleFunction('e')">e</button>
+            <button class="btn-function" onclick="toggleAngleMode()"><span id="angleModeBtn">DEG</span></button>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-operator" onclick="clearAll()">AC</button>
+            <button class="btn-operator" onclick="backspace()">⌫</button>
+            <button class="btn-operator" onclick="toggleSign()">±</button>
+            <button class="btn-operator" onclick="handleOperation('÷')">÷</button>
+
+            <button class="btn-number" onclick="handleNumber('7')">7</button>
+            <button class="btn-number" onclick="handleNumber('8')">8</button>
+            <button class="btn-number" onclick="handleNumber('9')">9</button>
+            <button class="btn-operator" onclick="handleOperation('×')">×</button>
+
+            <button class="btn-number" onclick="handleNumber('4')">4</button>
+            <button class="btn-number" onclick="handleNumber('5')">5</button>
+            <button class="btn-number" onclick="handleNumber('6')">6</button>
+            <button class="btn-operator" onclick="handleOperation('−')">−</button>
+
+            <button class="btn-number" onclick="handleNumber('1')">1</button>
+            <button class="btn-number" onclick="handleNumber('2')">2</button>
+            <button class="btn-number" onclick="handleNumber('3')">3</button>
+            <button class="btn-operator" onclick="handleOperation('+')">+</button>
+
+            <button class="btn-number btn-zero" onclick="handleNumber('0')">0</button>
+            <button class="btn-number" onclick="handleDecimal()">.</button>
+            <button class="btn-equals" onclick="calculate()">=</button>
+        </div>
+
+        <div class="footer">Scientific Calculator</div>
+    </div>
+
+    <script>
+        let display = '0';
+        let previousValue = null;
+        let operation = null;
+        let newNumber = true;
+        let advancedMode = false;
+        let isDegreeMode = true;
+
+        function updateDisplay() {
+            document.getElementById('display').textContent = display;
+            if (operation && previousValue !== null) {
+                document.getElementById('operationDisplay').textContent = previousValue + ' ' + operation;
+            } else {
+                document.getElementById('operationDisplay').textContent = '';
+            }
+        }
+
+        function handleNumber(num) {
+            if (newNumber) {
+                display = num;
+                newNumber = false;
+            } else {
+                display = display === '0' ? num : display + num;
+            }
+            updateDisplay();
+        }
+
+        function handleDecimal() {
+            if (newNumber) {
+                display = '0.';
+                newNumber = false;
+            } else if (!display.includes('.')) {
+                display += '.';
+            }
+            updateDisplay();
+        }
+
+        function handleOperation(op) {
+            const current = parseFloat(display);
+            
+            if (previousValue !== null && operation && !newNumber) {
+                const result = performCalculation(previousValue, current, operation);
+                display = formatResult(result);
+                previousValue = result;
+            } else {
+                previousValue = current;
+            }
+            
+            operation = op;
+            newNumber = true;
+            updateDisplay();
+        }
+
+        function calculate() {
+            if (operation && previousValue !== null) {
+                const current = parseFloat(display);
+                const result = performCalculation(previousValue, current, operation);
+                display = formatResult(result);
+                previousValue = null;
+                operation = null;
+                newNumber = true;
+                updateDisplay();
+            }
+        }
+
+        function performCalculation(prev, curr, op) {
+            switch (op) {
+                case '+': return prev + curr;
+                case '−': return prev - curr;
+                case '×': return prev * curr;
+                case '÷': return prev / curr;
+                case '^': return Math.pow(prev, curr);
+                default: return curr;
+            }
+        }
+
+        function clearAll() {
+            display = '0';
+            previousValue = null;
+            operation = null;
+            newNumber = true;
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (display.length > 1) {
+                display = display.slice(0, -1);
+            } else {
+                display = '0';
+                newNumber = true;
+            }
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            display = formatResult(-parseFloat(display));
+            updateDisplay();
+        }
+
+        function handleFunction(func) {
+            const current = parseFloat(display);
+            let result;
+
+            switch (func) {
+                case 'sqrt':
+                    result = Math.sqrt(current);
+                    break;
+                case 'square':
+                    result = Math.pow(current, 2);
+                    break;
+                case 'reciprocal':
+                    result = 1 / current;
+                    break;
+                case 'sin':
+                    result = isDegreeMode ? Math.sin(current * Math.PI / 180) : Math.sin(current);
+                    break;
+                case 'cos':
+                    result = isDegreeMode ? Math.cos(current * Math.PI / 180) : Math.cos(current);
+                    break;
+                case 'tan':
+                    result = isDegreeMode ? Math.tan(current * Math.PI / 180) : Math.tan(current);
+                    break;
+                case 'ln':
+                    result = Math.log(current);
+                    break;
+                case 'log':
+                    result = Math.log10(current);
+                    break;
+                case 'exp':
+                    result = Math.exp(current);
+                    break;
+                case 'pow10':
+                    result = Math.pow(10, current);
+                    break;
+                case 'pi':
+                    display = formatResult(Math.PI);
+                    newNumber = true;
+                    updateDisplay();
+                    return;
+                case 'e':
+                    display = formatResult(Math.E);
+                    newNumber = true;
+                    updateDisplay();
+                    return;
+                case 'factorial':
+                    result = factorial(Math.floor(current));
+                    break;
+                case 'power':
+                    handleOperation('^');
+                    return;
+            }
+
+            display = formatResult(result);
+            newNumber = true;
+            updateDisplay();
+        }
+
+        function factorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+
+        function toggleMode() {
+            advancedMode = !advancedMode;
+            const panel = document.getElementById('advancedPanel');
+            const modeText = document.getElementById('calcMode');
+            const btn = document.querySelector('.mode-toggle');
+            
+            if (advancedMode) {
+                panel.classList.add('active');
+                btn.textContent = '← Basic Mode';
+                modeText.textContent = 'ADVANCED';
+            } else {
+                panel.classList.remove('active');
+                btn.textContent = 'Advanced Mode →';
+                modeText.textContent = 'BASIC';
+            }
+        }
+
+        function toggleAngleMode() {
+            isDegreeMode = !isDegreeMode;
+            const angleText = isDegreeMode ? 'DEG' : 'RAD';
+            document.getElementById('angleMode').textContent = angleText;
+            document.getElementById('angleModeBtn').textContent = angleText;
+        }
+
+        function formatResult(value) {
+            if (isNaN(value) || !isFinite(value)) return 'Error';
+            if (value === Math.floor(value)) return value.toString();
+            return value.toFixed(10).replace(/\.?0+$/, '');
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
